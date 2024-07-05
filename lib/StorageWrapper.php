@@ -47,7 +47,6 @@ class StorageWrapper extends Wrapper implements IWriteStreamStorage {
 		$this->mountPoint = $parameters['mountPoint'];
 
 		$this->mask = Constants::PERMISSION_ALL;
-		$this->mask &= ~Constants::PERMISSION_READ;
 		$this->mask &= ~Constants::PERMISSION_CREATE;
 		$this->mask &= ~Constants::PERMISSION_UPDATE;
 		$this->mask &= ~Constants::PERMISSION_DELETE;
@@ -110,11 +109,6 @@ class StorageWrapper extends Wrapper implements IWriteStreamStorage {
 	 * @return bool
 	 */
 	public function isReadable($path) {
-		try {
-			$this->checkFileAccess($path);
-		} catch (ForbiddenException $e) {
-			return false;
-		}
 		return $this->storage->isReadable($path);
 	}
 
@@ -165,7 +159,6 @@ class StorageWrapper extends Wrapper implements IWriteStreamStorage {
 	 * @throws ForbiddenException
 	 */
 	public function file_get_contents($path) {
-		$this->checkFileAccess($path, false);
 		return $this->storage->file_get_contents($path);
 	}
 
@@ -233,7 +226,10 @@ class StorageWrapper extends Wrapper implements IWriteStreamStorage {
 	 * @throws ForbiddenException
 	 */
 	public function fopen($path, $mode) {
-		$this->checkFileAccess($path, false);
+		if ($mode == "w" || $mode == "w+" || $mode == "a" || $mode == "a+"
+		|| $mode == "x" || $mode == "x+" || $mode == "c" || $mode == "c+") {
+			$this->checkFileAccess($path, false);
+		}
 		return $this->storage->fopen($path, $mode);
 	}
 
@@ -276,7 +272,6 @@ class StorageWrapper extends Wrapper implements IWriteStreamStorage {
 	 * @throws ForbiddenException
 	 */
 	public function getDirectDownload($path) {
-		$this->checkFileAccess($path, false);
 		return $this->storage->getDirectDownload($path);
 	}
 
